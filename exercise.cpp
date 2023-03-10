@@ -1,10 +1,12 @@
 
 #include <iostream>
 #include <fstream>
+#include <ostream>
 #include <vector>
 #include <string>
 
 using std::ifstream;
+using std::ostream;
 using std::string;
 using std::vector;
 using std::cerr;
@@ -14,7 +16,9 @@ using std::endl;
 #include "rapidxml/rapidxml.hpp"
 #include "rapidxml/rapidxml_utils.hpp"
 
-void parseXmlFile(const string& path, vector<vector<string> > &data) {
+#include "HTMLBuilder/HTML.h"
+
+void parseXmlToHtml(const string& path) {
 
 	rapidxml::file<> file(path.c_str());
 	if (!file.data()) {
@@ -23,25 +27,49 @@ void parseXmlFile(const string& path, vector<vector<string> > &data) {
 	}
 
 	rapidxml::xml_document<> doc;
-	doc.parse<0>(file.data());
+    try {
+        doc.parse<0>(file.data());
+    } catch (const rapidxml::parse_error& e) {
+        cerr << "Parsing failed of " << path << ": " << e.what() << endl;
+        return;
+    }
+
+    static const vector<string> cols = {"TITLE", "ARTIST", "COMPANY", "COUNTRY", "PRICE", "YEAR"};
+
+    HTML::Document htmlDoc("CDs");
+
+    HTML::Table table;
+
+    HTML::Row headerRow;
+    for (const string& col : cols) {
+    	headerRow << HTML::ColHeader(col.c_str());
+    }
+
+    /* Move to function parameter instead of copying the string */
+    table << std::move(headerRow);
 
 	for (rapidxml::xml_node<> *cd = doc.first_node("CATALOG")->first_node("CD"); cd; cd = cd->next_sibling()) {
 
-	    string title = cd->first_node("TITLE")->value();
-	    string artist = cd->first_node("ARTIST")->value();
-	    string company = cd->first_node("COMPANY")->value();
-	    string country = cd->first_node("COUNTRY")->value();
-	    double price = std::stod(cd->first_node("PRICE")->value());
-	    int year = std::stoi(cd->first_node("YEAR")->value());
+		HTML::Row row;
 
-	    cout << "Title: " << title << endl;
-	    cout << "Artist: " << artist << endl;
-	    cout << "Company: " << company << endl;
-	    cout << "Country: " << country << endl;
-	    cout << "Price: " << price << endl;
-	    cout << "Year: " << year << endl;
+		for (const string& col : cols) {
+			rapidxml::xml_node<> *child = cd->first_node(col.c_str());
+			if (child != nullptr) {
+				row << HTML::Col(child->value());
+			} else {
+				/* No column so just setting N/A */
+				row << HTML::Col("N/A");
+			}
+		}
+
+		table << std::move(row);
 	}
 
+	htmlDoc << std::move(table);
+
+	std::ofstream htmlFile("cds.html");
+	htmlFile << htmlDoc << endl;
+	htmlFile.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -52,10 +80,7 @@ int main(int argc, char* argv[]) {
     }
 
     string path = argv[1];
-    cout << "path: " << path << endl;
-
-	vector<vector<string> > data;
-	parseXmlFile(path, data);
+	parseXmlToHtml(path);
 
 	return 0;
 }
