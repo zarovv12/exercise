@@ -7,54 +7,41 @@
 using std::ifstream;
 using std::string;
 using std::vector;
+using std::cerr;
 using std::cout;
 using std::endl;
 
-#define XML_OPEN(STR) ("<" + (STR) + ">")
-#define XML_CLOSE(STR) ("</" + (STR) + ">")
+#include "rapidxml/rapidxml.hpp"
+#include "rapidxml/rapidxml_utils.hpp"
 
 void parseXmlFile(const string& path, vector<vector<string> > &data) {
 
-	/* Assuming same xml attributes we define constants */
-	static const string _catalogStr = "CATALOG";
-	static const string _cdStr = "CD";
-	static const vector<string> _titles = {"TITLE"};
-
-	ifstream file(path);
-	string line;
-
-
-	bool cdBlock = false;
-
-	if (file.is_open()) {
-		while (std::getline(file, line)) {
-
-			if (line.find(XML_OPEN(_cdStr)) != string::npos) {
-				data.emplace_back();
-			} else if (line.find(XML_OPEN(_titles[0])) != string::npos) {
-
-			}
-		}
-
-		file.close();
-
-	} else {
-		cout << "Failed opening file" << endl;
+	rapidxml::file<> file(path.c_str());
+	if (!file.data()) {
+	    cerr << "Could not open XML file" << endl;
+	    return;
 	}
 
-//	std::stringstream ss(xmlString);
-//	std::string line;
-//	while (std::getline(ss, line)) {
-//		if (line.find("<CD>") != std::string::npos) {
-//			data.emplace_back();
-//		} else if (line.find("<TITLE>") != std::string::npos) {
-//			std::string title = line.substr(line.find(">") + 1,
-//					line.rfind("<") - line.find(">") - 1);
-//			data.back().push_back(title);
-//		} else if (line.find("<ARTIST>") != std::string::npos) {
-//
-//		}
-//	}
+	rapidxml::xml_document<> doc;
+	doc.parse<0>(file.data());
+
+	for (rapidxml::xml_node<> *cd = doc.first_node("CATALOG")->first_node("CD"); cd; cd = cd->next_sibling()) {
+
+	    string title = cd->first_node("TITLE")->value();
+	    string artist = cd->first_node("ARTIST")->value();
+	    string company = cd->first_node("COMPANY")->value();
+	    string country = cd->first_node("COUNTRY")->value();
+	    double price = std::stod(cd->first_node("PRICE")->value());
+	    int year = std::stoi(cd->first_node("YEAR")->value());
+
+	    cout << "Title: " << title << endl;
+	    cout << "Artist: " << artist << endl;
+	    cout << "Company: " << company << endl;
+	    cout << "Country: " << country << endl;
+	    cout << "Price: " << price << endl;
+	    cout << "Year: " << year << endl;
+	}
+
 }
 
 int main(int argc, char* argv[]) {
