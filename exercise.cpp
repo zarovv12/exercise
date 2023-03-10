@@ -18,7 +18,17 @@ using std::endl;
 
 #include "HTMLBuilder/HTML.h"
 
+#define HTMLPath "cds.html"
+
 void parseXmlToHtml(const string& path) {
+
+	ifstream f(path.c_str());
+	if (!f.good()) {
+		cerr << "File " << path << " doesnt exists" << endl;
+		return;
+	}
+
+	f.close();
 
 	rapidxml::file<> file(path.c_str());
 	if (!file.data()) {
@@ -39,7 +49,7 @@ void parseXmlToHtml(const string& path) {
     HTML::Document htmlDoc("CDs");
 
     HTML::Table table;
-    table.cls("border=1");
+    table.addAttribute("border", "1");
 
     HTML::Row headerRow;
     for (const string& col : cols) {
@@ -68,7 +78,7 @@ void parseXmlToHtml(const string& path) {
 
 	htmlDoc << std::move(table);
 
-	std::ofstream htmlFile("cds.html");
+	std::ofstream htmlFile(HTMLPath);
 	htmlFile << htmlDoc << endl;
 	htmlFile.close();
 }
@@ -81,7 +91,9 @@ int main(int argc, char* argv[]) {
     }
 
     string path = argv[1];
+    cout << "Running parse on path " << path << endl;
 	parseXmlToHtml(path);
+	cout << "All done. HTML file " << string(HTMLPath) << " created" << endl;
 
 	return 0;
 }
