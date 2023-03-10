@@ -39,6 +39,7 @@ void parseXmlToHtml(const string& path) {
     HTML::Document htmlDoc("CDs");
 
     HTML::Table table;
+    table.cls("border=1");
 
     HTML::Row headerRow;
     for (const string& col : cols) {
