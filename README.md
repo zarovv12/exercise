@@ -42,5 +42,5 @@ chmod 777 ex
 
 
 ### References:
-https://github.com/SRombauts/HtmlBuilder
-https://rapidxml.sourceforge.net/
+* https://github.com/SRombauts/HtmlBuilder
+* https://rapidxml.sourceforge.net/
