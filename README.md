@@ -10,6 +10,8 @@ Using those libraries the solution was simple. I parsed the xml file using rapid
 looped the elements using the predefined column names, pushed the values to the html builder stream
 and with that i created the html file.
 
+In real envs, the security of the libraries need to be checked.
+
 ### Prerequisites
 * Checked on amazon linux version 2.
 * C++ version 14.
